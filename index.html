@@ -1381,7 +1381,7 @@
               <svg viewBox="-60 -34 120 68"><use href="#roach"/></svg>
               <svg viewBox="-60 -34 120 68"><use href="#roach"/></svg>
             </span>
-            <strong>247</strong> in the colony
+            <strong id="colonyCount">247</strong> in the colony
           </span>
         </div>
       </form>
@@ -1554,11 +1554,31 @@ form.addEventListener('submit', (e) => {
   });
 });
 
+/* ─── Live colony counter (247 base + Netlify Forms submissions) ─── */
+const colonyCountEl = document.getElementById('colonyCount');
+let colonyCount = 247;
+function setColonyCount(n) {
+  colonyCount = n;
+  if (colonyCountEl) colonyCountEl.textContent = n.toLocaleString();
+}
+function fetchColonyCount() {
+  fetch('/.netlify/functions/count', { cache: 'no-store' })
+    .then((r) => r.ok ? r.json() : null)
+    .then((d) => { if (d && typeof d.count === 'number') setColonyCount(d.count); })
+    .catch(() => {});
+}
+fetchColonyCount();
+// Refresh every 30s in case the page is left open
+setInterval(fetchColonyCount, 30000);
+
 function onSubscribeSuccess() {
   btn.textContent = '✓ ADDED';
   btn.classList.add('success');
   btn.disabled = true;
-  meta.innerHTML = '<span class="ok">you are now roach #248 in the colony.</span>';
+  // Optimistic increment — then re-sync from server shortly after
+  setColonyCount(colonyCount + 1);
+  setTimeout(fetchColonyCount, 3000);
+  meta.innerHTML = `<span class="ok">you are now roach #${colonyCount} in the colony.</span>`;
   // Peeker pops out and salutes
   const peeker = document.querySelector('.peek-roach');
   const saluteText = document.getElementById('saluteText');
