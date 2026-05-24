@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>cockroaches.social — coming soon</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="alternate icon" href="/favicon.svg"/>
+<meta name="theme-color" content="#14100c"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Special+Elite&family=Anton&display=swap" rel="stylesheet">
@@ -786,7 +789,20 @@
   }
   .form-meta .ok { color: var(--term); }
   .form-meta .err { color: var(--danger); }
-  .form-meta .count strong { color: var(--ink); font-weight: 500; }
+  .form-meta .count strong {
+    color: var(--ink); font-weight: 500;
+    display: inline-block;
+    transition: color 0.3s;
+  }
+  .form-meta .count strong.bump {
+    animation: count-bump 0.7s ease-out;
+  }
+  @keyframes count-bump {
+    0%   { color: var(--ink);  transform: scale(1); text-shadow: none; }
+    20%  { color: var(--term); transform: scale(1.35); text-shadow: 0 0 14px var(--term); }
+    60%  { color: var(--term); transform: scale(1.05); text-shadow: 0 0 6px var(--term); }
+    100% { color: var(--ink);  transform: scale(1); text-shadow: none; }
+  }
   .form-meta .avatars {
     display: inline-flex;
     margin-right: 6px;
@@ -1560,8 +1576,15 @@ form.addEventListener('submit', (e) => {
 const colonyCountEl = document.getElementById('colonyCount');
 let colonyCount = 247;
 function setColonyCount(n) {
+  const changed = n !== colonyCount;
   colonyCount = n;
-  if (colonyCountEl) colonyCountEl.textContent = n.toLocaleString();
+  if (!colonyCountEl) return;
+  colonyCountEl.textContent = n.toLocaleString();
+  if (changed) {
+    colonyCountEl.classList.remove('bump');
+    void colonyCountEl.offsetWidth;
+    colonyCountEl.classList.add('bump');
+  }
 }
 function fetchColonyCount() {
   fetch('/.netlify/functions/count', { cache: 'no-store' })
