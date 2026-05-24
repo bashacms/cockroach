@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cockroaches.social — coming soon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Special+Elite&family=Anton&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0c0907;
+    --bg-1: #14100c;
+    --ink: #ece6dc;
+    --muted: #8a7e6e;
+    --line: #2a2218;
+    --term: #6ee7a6;
+    --term-dim: #3a8a5e;
+    --amber: #f0b952;
+    --danger: #ef6b5b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: var(--bg-0); overflow-x: hidden; }
+  body {
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, #221913 0%, var(--bg-1) 55%, var(--bg-0) 100%);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: relative;
+    cursor: crosshair;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    /* iOS safe areas */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Touch devices: crosshair cursor is irrelevant, allow scroll fallback */
+  @media (hover: none) and (pointer: coarse) {
+    body { cursor: default; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  }
+  /* film grain */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.05) 2px 3px);
+    pointer-events: none; z-index: 100; mix-blend-mode: multiply;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none; z-index: 101;
+  }
+
+  /* fixed-viewport layout: header / hero / footer */
+  .stage {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    .stage { overflow: visible; }
+  }
+
+  /* ─── Top bar ─────────────────────────────────────── */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 22px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    border-bottom: 1px dashed var(--line);
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 44px;
+  }
+  .brand-mini {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--ink); font-size: 11px;
+  }
+  .brand-mini svg { width: 22px; height: 14px; }
+  .status { display: flex; align-items: center; gap: 12px; }
+  /* LIGHT SWITCH — flip it and the page floods with light, all roaches
+     scatter to the edges. Flip it off, they sneak back. */
+  .light-switch {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 3px;
+    transition: all 0.2s;
+  }
+  .light-switch:hover { border-color: var(--amber); color: var(--ink); }
+  .light-switch .bulb {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #3a3530;
+    transition: all 0.3s;
+  }
+  body.lights-on .light-switch .bulb {
+    background: #ffe27a;
+    box-shadow: 0 0 16px #ffe27a, 0 0 30px #ffe27a;
+  }
+  body.lights-on .light-switch { border-color: var(--amber); color: var(--amber); }
+
+  /* LIGHTS-ON MODE — dramatic flood-light. Roaches in JS panic to corners. */
+  body.lights-on {
+    background: radial-gradient(ellipse 100% 80% at 50% 30%, #fef3c7 0%, #fde68a 50%, #fcd34d 100%) !important;
+    transition: background 0.4s;
+  }
+  body.lights-on::after {
+    background: radial-gradient(ellipse at center, rgba(255,255,200,0.3) 0%, transparent 80%) !important;
+  }
+  body.lights-on .topbar, body.lights-on .bottom {
+    border-color: rgba(120, 80, 30, 0.4);
+    color: #5c4a2a;
+  }
+  body.lights-on .topbar .brand-mini { color: #2a1d0a; }
+  body.lights-on .wordmark { color: #1a1208; text-shadow: 0 2px 0 rgba(255,255,255,0.5); }
+  body.lights-on .subtitle { color: #5c4a2a; }
+  body.lights-on .pill { background: rgba(0,0,0,0.1); border-color: rgba(0,0,0,0.4); color: #1a1208; }
+  body.lights-on .eyebrow { color: #2a1d0a; }
+  body.lights-on .form-row { background: rgba(255, 250, 220, 0.85); border-color: rgba(120, 80, 30, 0.4); }
+  body.lights-on .form-row input { color: #1a1208; }
+  body.lights-on .form-row input::placeholder { color: #7a6840; }
+  body.lights-on .marquee-inner { color: #5c4a2a; }
+  body.lights-on .scene::before { background: radial-gradient(ellipse at center, rgba(255,255,255,0.4) 0%, transparent 70%); }
+  body.lights-on { cursor: default; }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 10px var(--amber);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  /* ─── Hero (fills middle, no scroll) ──────────────── */
+  .hero {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(260px, 1fr) auto;
+    align-items: center;
+    justify-items: center;
+    text-align: center;
+    padding: clamp(8px, 1.4vh, 18px) clamp(14px, 3vw, 28px);
+    gap: clamp(4px, 1vh, 10px);
+    min-height: 0;
+    overflow: visible;
+    position: relative;
+    z-index: 5;
+  }
+
+  /* eyebrow */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(9px, 1vw, 11px);
+    letter-spacing: 0.32em;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .pill {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(240, 185, 82, 0.12);
+    border: 1px solid rgba(240, 185, 82, 0.35);
+    color: var(--amber);
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .pill .blink {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--amber); border-radius: 50%;
+    margin-right: 6px; vertical-align: middle;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  /* ─── Wordmark ────────────────────────────────────── */
+  .wordmark {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    font-size: clamp(22px, min(7.5vw, 10vh), 88px);
+    line-height: 0.9;
+    letter-spacing: -0.015em;
+    margin: 0;
+    color: var(--ink);
+    text-transform: uppercase;
+    white-space: nowrap;
+    max-width: 100%;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.6), 0 0 60px rgba(240, 185, 82, 0.08);
+  }
+  /* Very narrow phones: shrink hard so it never clips off-screen */
+  @media (max-width: 380px) {
+    .wordmark { font-size: clamp(18px, 8vw, 32px); letter-spacing: -0.02em; }
+  }
+  .wordmark .dot {
+    color: var(--amber);
+    display: inline-block;
+    margin: 0 -0.04em;
+  }
+
+  .subtitle {
+    font-family: 'Special Elite', monospace;
+    font-size: clamp(11px, 1.5vw, 16px);
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    margin: 0;
+    text-transform: uppercase;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .subtitle .glow { color: var(--term); }
+
+  /* ─── Scene (fits remaining space) ────────────────── */
+  .scene-wrap {
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+  .scene {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    height: 100%;
+    width: auto;
+    max-width: min(720px, 100%);
+    max-height: 100%;
+  }
+  .scene::before {
+    content: '';
+    position: absolute;
+    left: 10%; right: 10%;
+    top: 4%; height: 50%;
+    background: radial-gradient(ellipse at center, rgba(110, 231, 166, 0.18) 0%, transparent 70%);
+    filter: blur(24px);
+    z-index: 0;
+  }
+
+  .desk {
+    position: absolute;
+    left: -10%; right: -10%;
+    bottom: -2%;
+    height: 50%;
+    background: linear-gradient(180deg, #2a1f17 0%, #1a130d 60%, #0a0805 100%);
+    border-top: 1px solid #3a2c20;
+    box-shadow: 0 -2px 0 #3a2c20 inset, 0 -20px 40px -20px rgba(0,0,0,0.85) inset;
+    z-index: 0;
+  }
+  .desk::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 70px, rgba(0,0,0,0.18) 70px 71px),
+      repeating-linear-gradient(0deg, transparent 0 40px, rgba(255,255,255,0.012) 40px 41px);
+    opacity: 0.5;
+  }
+
+  /* monitor — left of scene */
+  .monitor {
+    position: absolute;
+    left: 14%; right: 14%;
+    top: 0%;
+    height: 36%;
+    background: #0a0807;
+    border: 10px solid #1a1410;
+    border-radius: 10px;
+    box-shadow:
+      0 0 0 1px #2a221b,
+      0 18px 36px -10px rgba(0,0,0,0.7),
+      0 0 70px rgba(110, 231, 166, 0.18);
+    overflow: hidden;
+    z-index: 2;
+  }
+  .monitor-stand {
+    position: absolute;
+    left: 50%; top: 37%;
+    width: 9%; height: 3%;
+    transform: translateX(-50%);
+    background: linear-gradient(to bottom, #1a1410, #0e0a07);
+    clip-path: polygon(38% 0, 62% 0, 88% 100%, 12% 100%);
+    z-index: 1;
+  }
+  .monitor-base {
+    position: absolute;
+    left: 50%; top: 40%;
+    width: 22%; height: 1.2%;
+    transform: translateX(-50%);
+    background: #1a1410; border-radius: 4px;
+    z-index: 1;
+  }
+
+  .screen {
+    height: 100%;
+    padding: 8px 10px;
+    font-size: clamp(7.5px, 1vw, 11px);
+    line-height: 1.55;
+    color: var(--term-dim);
+    overflow: hidden;
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(110, 231, 166, 0.08) 0%, transparent 60%),
+      #0a0807;
+  }
+  .screen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.20) 2px 3px);
+    pointer-events: none;
+  }
+  .screen::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+  }
+  .screen-header {
+    color: var(--muted);
+    font-size: 8.5px;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+    border-bottom: 1px solid #1c1610;
+    padding-bottom: 4px;
+  }
+  .screen-header .tabs { display: flex; gap: 8px; }
+  .screen-header .tab { color: #4a4234; }
+  .screen-header .tab.active { color: var(--term); }
+  .code-line { white-space: pre; min-height: 1em; }
+  .code-line .kw { color: #c084fc; }
+  .code-line .str { color: var(--amber); }
+  .code-line .com { color: #4a4234; font-style: italic; }
+  .code-line .fn { color: #67d8e0; }
+  .code-line .num { color: #f0b952; }
+  .typing-bar {
+    display: inline-block;
+    width: 6px; height: 1em;
+    background: var(--term);
+    vertical-align: text-bottom;
+    animation: blink 0.9s steps(2) infinite;
+  }
+
+  /* keyboard — aligned to where the big roach's hands land */
+  .keyboard {
+    position: absolute;
+    left: 18%; right: 18%;
+    top: 42%;
+    height: 5%;
+    background: linear-gradient(180deg, #2a2018 0%, #161108 100%);
+    border-radius: 4px;
+    box-shadow: 0 -1px 0 #3a2c20 inset, 0 4px 8px rgba(0,0,0,0.7);
+    display: grid;
+    grid-template-columns: repeat(22, 1fr);
+    gap: 1px;
+    padding: 2.5px;
+    z-index: 3;
+  }
+  .keyboard span {
+    background: #38291c;
+    border-radius: 1px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.4) inset;
+    transition: background 0.05s, transform 0.05s;
+  }
+  .keyboard span.press {
+    background: var(--amber);
+    box-shadow: 0 0 14px rgba(240,185,82,1), 0 0 4px rgba(240,185,82,1);
+    transform: translateY(1.5px) scaleY(0.8);
+  }
+
+  /* Big-roach thought bubbles */
+  .thought {
+    position: absolute;
+    background: var(--bg-1);
+    color: var(--term);
+    border: 1px solid var(--term-dim);
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 7;
+    opacity: 0;
+    transform: translate(-50%, 0);
+    text-shadow: 0 0 8px rgba(110, 231, 166, 0.4);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+  }
+  .thought::after {
+    /* bubble tail — small dots fading toward roach */
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: 30%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bg-1);
+    border: 1px solid var(--term-dim);
+    box-shadow:
+      -6px 6px 0 -1px var(--bg-1),
+      -6px 6px 0 0 var(--term-dim),
+      -2px 3px 0 -2px var(--bg-1),
+      -2px 3px 0 -1px var(--term-dim);
+  }
+  .thought.show {
+    animation: thought-pop 4s ease-out forwards;
+  }
+  @keyframes thought-pop {
+    0%   { opacity: 0; transform: translate(-50%, 20px) scale(0.6); }
+    10%  { opacity: 1; transform: translate(-50%, 0) scale(1.05); }
+    18%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    80%  { opacity: 1; transform: translate(-50%, -4px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -20px) scale(0.95); }
+  }
+
+  /* ─── PROTEST SIGNS ─── Cockroach Janta Party rally placards.
+       Hand-lettered slogans on cardboard, held up on a wooden stick. */
+  .protest {
+    position: absolute;
+    pointer-events: none;
+    z-index: 8;
+    transform-origin: 50% 100%;
+    opacity: 0;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.55));
+  }
+  .protest .stick {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 4px;
+    height: 36px;
+    background: linear-gradient(90deg, #6b4a26 0%, #9e7240 40%, #6b4a26 100%);
+    transform: translateX(-50%);
+    border-radius: 1px;
+    box-shadow: 0 0 0 1px #2a1808;
+  }
+  .protest .card {
+    position: relative;
+    padding: 9px 16px 10px;
+    font-family: 'Special Elite', 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.1;
+    border: 2px solid #1a1208;
+    border-radius: 2px;
+    white-space: nowrap;
+    text-align: center;
+    /* subtle cardboard texture */
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0 1px, transparent 1px 6px);
+  }
+  .protest .card::before {
+    /* ragged-edge corner shadow for hand-cut card look */
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+    pointer-events: none;
+  }
+  /* color variants for different signs */
+  .protest.c-amber  .card { background-color: #f3c95a; color: #1a1208; }
+  .protest.c-cream  .card { background-color: #efe6cf; color: #1a1208; }
+  .protest.c-red    .card { background-color: #d94a3c; color: #fff4e6; border-color: #4a1208; }
+  .protest.c-green  .card { background-color: #4ea36b; color: #0a1f12; border-color: #0a3a1f; }
+  .protest.c-white  .card { background-color: #f6efe0; color: #1a1208; }
+  .protest .sub {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    opacity: 0.7;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .protest.show {
+    animation: protest-rise 5.5s ease-out forwards;
+  }
+  @keyframes protest-rise {
+    0%   { opacity: 0; transform: translate(-50%, 40px) rotate(var(--rot, -3deg)) scale(0.7); }
+    8%   { opacity: 1; transform: translate(-50%, 0) rotate(var(--rot, -3deg)) scale(1.05); }
+    14%  { opacity: 1; transform: translate(-50%, 0) rotate(var(--rot, -3deg)) scale(1); }
+    /* protest shake */
+    30%  { transform: translate(-50%, -6px) rotate(calc(var(--rot, -3deg) + 5deg)); }
+    45%  { transform: translate(-50%, -3px) rotate(calc(var(--rot, -3deg) - 5deg)); }
+    60%  { transform: translate(-50%, -6px) rotate(calc(var(--rot, -3deg) + 4deg)); }
+    75%  { opacity: 1; transform: translate(-50%, -3px) rotate(var(--rot, -3deg)); }
+    100% { opacity: 0; transform: translate(-50%, -30px) rotate(var(--rot, -3deg)) scale(0.95); }
+  }
+  body.lights-on .protest .card { filter: brightness(0.92); }
+
+  /* BIG roach — the hero coder. Custom vertical-orientation SVG (head up,
+     arms reaching up onto the keyboard, glasses on, terminal-green eye-glow).
+     Sized BIG and bright to be clearly visible. */
+  .big-roach {
+    position: absolute;
+    left: 50%;
+    bottom: -5%;
+    width: auto;
+    height: 70%;
+    aspect-ratio: 116 / 156;
+    transform: translateX(-50%);
+    transform-origin: center bottom;
+    z-index: 4;
+    filter: brightness(1.5) saturate(1.35) drop-shadow(0 12px 20px rgba(0,0,0,0.8));
+    animation: type-bob 0.55s ease-in-out infinite;
+  }
+  @keyframes type-bob {
+    0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+    33%      { transform: translateX(-50%) translateY(-2px) rotate(-0.5deg); }
+    66%      { transform: translateX(-50%) translateY(-1px) rotate(0.5deg); }
+  }
+  /* antennae sway */
+  .big-roach .a-l, .big-roach .a-r { transform-box: fill-box; transform-origin: bottom center; }
+  .big-roach .a-l { animation: ant-l 2.2s ease-in-out infinite; }
+  .big-roach .a-r { animation: ant-r 2.4s ease-in-out infinite; }
+  @keyframes ant-l { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(-9deg);} }
+  @keyframes ant-r { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(9deg);} }
+  /* 4 typing arms — each idle bobs, then `.tap` slams a key on every keystroke */
+  .big-roach .arm-l1, .big-roach .arm-l2,
+  .big-roach .arm-r1, .big-roach .arm-r2 {
+    transform-box: fill-box;
+    transform-origin: bottom center;
+  }
+  .big-roach .arm-l1 { animation: idle1 1.4s ease-in-out infinite; }
+  .big-roach .arm-l2 { animation: idle2 1.7s ease-in-out infinite 0.15s; }
+  .big-roach .arm-r1 { animation: idle1 1.5s ease-in-out infinite 0.1s; }
+  .big-roach .arm-r2 { animation: idle2 1.8s ease-in-out infinite 0.25s; }
+  @keyframes idle1 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-1.5px);} }
+  @keyframes idle2 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-1px);} }
+  /* back legs wiggle naturally — each leg pivots at its body attachment */
+  .big-roach .leg { transform-box: fill-box; }
+  .big-roach .leg-bl { transform-origin: 100% 0%; animation: leg-wiggle-l 1.3s ease-in-out infinite; }
+  .big-roach .leg-br { transform-origin: 0% 0%;   animation: leg-wiggle-r 1.4s ease-in-out infinite 0.2s; }
+  .big-roach .leg-ml { transform-origin: 100% 0%; animation: leg-wiggle-l 1.6s ease-in-out infinite 0.5s; }
+  .big-roach .leg-mr { transform-origin: 0% 0%;   animation: leg-wiggle-r 1.5s ease-in-out infinite 0.35s; }
+  @keyframes leg-wiggle-l {
+    0%, 100% { transform: rotate(0deg) translate(0, 0); }
+    25%      { transform: rotate(-4deg) translate(-1px, -0.5px); }
+    50%      { transform: rotate(2deg) translate(0.5px, 0.5px); }
+    75%      { transform: rotate(-2deg) translate(-0.5px, 0); }
+  }
+  @keyframes leg-wiggle-r {
+    0%, 100% { transform: rotate(0deg) translate(0, 0); }
+    25%      { transform: rotate(4deg) translate(1px, -0.5px); }
+    50%      { transform: rotate(-2deg) translate(-0.5px, 0.5px); }
+    75%      { transform: rotate(2deg) translate(0.5px, 0); }
+  }
+  .big-roach .arm-l1.tap, .big-roach .arm-l2.tap,
+  .big-roach .arm-r1.tap, .big-roach .arm-r2.tap {
+    animation: keystroke 0.18s ease-out;
+  }
+  @keyframes keystroke {
+    0%   { transform: translateY(0); }
+    35%  { transform: translateY(5px) scaleY(0.92); }
+    100% { transform: translateY(0); }
+  }
+
+  /* ─── Subscribe ───────────────────────────────────── */
+  .subscribe-section {
+    width: 100%;
+    max-width: 480px;
+  }
+  .prompt-label {
+    font-size: 11px;
+    color: var(--term-dim);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+    text-align: left;
+  }
+  .prompt-label .cursor {
+    display: inline-block;
+    width: 7px; height: 12px;
+    background: var(--term);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .form-row {
+    display: flex;
+    border: 1px solid var(--line);
+    background: rgba(10, 7, 5, 0.75);
+    backdrop-filter: blur(6px);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: visible;
+  }
+  .btn-wrap {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    overflow: visible;
+    z-index: 0;
+  }
+  /* Peeker — medium-size roach hiding BEHIND the JOIN SWARM button.
+     Starts hidden (translated down inside the button area, z-index 0),
+     periodically pops UP above the button, looks around, then ducks back. */
+  /* Peeker — LARGE roach hiding behind the JOIN SWARM button. Multi-phase
+     peek animation: antennae first, then eyes, then full head + shoulders.
+     Hover the button to trigger an instant peek. */
+  /* peek-zone clips the cockroach when it's hidden below */
+  .peek-zone {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 110px;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .peek-roach {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 130px;
+    height: 156px;
+    /* HIDDEN by default — ducked completely behind the button */
+    transform: translate(-50%, 110%);
+    transform-origin: center top;
+    z-index: 0;
+    pointer-events: none;
+    filter: brightness(1.6) saturate(1.5) drop-shadow(0 8px 14px rgba(0,0,0,0.85));
+    /* slow rise / fall when hover toggles */
+    transition: transform 1.5s cubic-bezier(0.22, 0.7, 0.3, 1);
+  }
+  .btn-wrap button {
+    position: relative;
+    z-index: 2;
+  }
+  /* Hover the button → roach slowly rises and rests hands on it */
+  .btn-wrap:hover .peek-roach {
+    transform: translate(-50%, 0);
+  }
+  /* SALUTE — natural rise, hold, lower on successful subscribe */
+  .peek-roach.salute {
+    transition: none;
+    animation: salute 4s ease-in-out forwards !important;
+  }
+  @keyframes salute {
+    0%   { transform: translate(-50%, 110%); }
+    18%  { transform: translate(-50%, -4%); }
+    25%  { transform: translate(-50%, -4%) rotate(-1deg); }
+    80%  { transform: translate(-50%, -4%) rotate(-1deg); }
+    100% { transform: translate(-50%, 110%); }
+  }
+  /* salute arm — hidden by default, fades in during salute */
+  .peek-roach .salute-arm { opacity: 0; }
+  .peek-roach .crossed-arms { opacity: 1; transition: opacity 0.2s; }
+  .peek-roach.salute .crossed-arms { opacity: 0; }
+  .peek-roach.salute .salute-arm {
+    animation: salute-arm 3.6s ease-out forwards;
+  }
+  @keyframes salute-arm {
+    0%, 14%  { opacity: 0; }
+    20%, 85% { opacity: 1; }
+    100%     { opacity: 0; }
+  }
+  .welcome-bubble {
+    position: absolute;
+    bottom: calc(100% + 150px);
+    left: 50%;
+    transform: translate(-50%, 0) scale(0);
+    background: var(--term);
+    color: #0a1f12;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding: 8px 14px;
+    border-radius: 8px;
+    white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6), 0 0 30px rgba(110, 231, 166, 0.4);
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+  }
+  .welcome-bubble::after {
+    /* tail pointing down to roach */
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: var(--term);
+    border-bottom: 0;
+  }
+  .welcome-bubble.show {
+    animation: bubble-pop 3.2s cubic-bezier(0.34, 1.5, 0.64, 1) forwards;
+  }
+  @keyframes bubble-pop {
+    0%   { opacity: 0; transform: translate(-50%, 20px) scale(0.3); }
+    20%  { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+    30%  { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    85%  { opacity: 1; transform: translate(-50%, -4px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -20px) scale(0.9); }
+  }
+  /* 'o7' salute emoticon — floats up beside the cockroach */
+  .salute-text {
+    position: absolute;
+    bottom: calc(100% + 100px);
+    left: calc(50% + 60px);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--term);
+    text-shadow: 0 0 14px rgba(110, 231, 166, 0.95);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
+  .salute-text.show {
+    animation: salute-text 2.8s ease-out forwards;
+  }
+  @keyframes salute-text {
+    0%   { opacity: 0; transform: translateY(20px) scale(0.5); }
+    20%  { opacity: 1; transform: translateY(0) scale(1.3); }
+    70%  { opacity: 1; transform: translateY(-10px) scale(1.1); }
+    100% { opacity: 0; transform: translateY(-32px) scale(0.9); }
+  }
+  .form-row:focus-within {
+    border-color: var(--term);
+    box-shadow: 0 0 0 3px rgba(110, 231, 166, 0.15);
+  }
+  .form-row input {
+    flex: 1; min-width: 0;
+    background: transparent; border: 0; outline: 0;
+    padding: 13px 16px;
+    font: inherit; font-size: 13px;
+    color: var(--ink);
+  }
+  .form-row input::placeholder { color: #57503f; }
+  .form-row button {
+    background: var(--amber);
+    color: #1a1208;
+    border: 0;
+    padding: 0 20px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, transform 0.05s;
+  }
+  .form-row button:hover { background: #f5c668; }
+  .form-row button:active { transform: translateY(1px); }
+  .form-row button.success { background: var(--term); color: #0a1f12; }
+  .form-row button:disabled { cursor: default; }
+  .form-meta {
+    margin-top: 8px;
+    font-size: 10.5px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    letter-spacing: 0.03em;
+  }
+  .form-meta .ok { color: var(--term); }
+  .form-meta .err { color: var(--danger); }
+  .form-meta .count strong { color: var(--ink); font-weight: 500; }
+  .form-meta .avatars {
+    display: inline-flex;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .form-meta .avatars svg {
+    width: 18px; height: 12px;
+    margin-left: -5px;
+    border-radius: 50%;
+    background: var(--bg-0);
+    padding: 1px;
+    border: 1px solid var(--line);
+  }
+
+  /* ─── Bottom bar ──────────────────────────────────── */
+  .bottom {
+    padding: 8px 22px;
+    font-size: 10px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    letter-spacing: 0.1em;
+    border-top: 1px dashed var(--line);
+    min-width: 0;
+    align-items: center;
+    min-height: 32px;
+  }
+  .bottom .marquee {
+    overflow: hidden;
+    flex: 1; min-width: 0;
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+  .marquee-inner {
+    display: inline-block;
+    white-space: nowrap;
+    animation: scroll 42s linear infinite;
+    color: var(--term-dim);
+  }
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .bottom .side { white-space: nowrap; }
+
+  /* swarm — z-index above hero so roaches crawl on the wordmark */
+  .swarm { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  .roach { position: absolute; will-change: transform; }
+
+  /* ─── Tablet (portrait + small landscape) ─────────── */
+  @media (min-width: 721px) and (max-width: 1024px) {
+    .topbar { padding: 10px 18px; font-size: 9.5px; }
+    .hero { padding: 14px 20px; gap: 10px; }
+    .scene { aspect-ratio: 16 / 9; max-width: 600px; }
+    .subscribe-section { max-width: 440px; }
+  }
+
+  /* ─── Mobile ──────────────────────────────────────── */
+  @media (max-width: 720px) {
+    .topbar { padding: 8px 14px; min-height: 36px; font-size: 9px; }
+    .topbar .ticker { display: none; }
+    .hero {
+      padding: 8px 12px;
+      gap: 8px;
+      grid-template-rows: auto auto auto minmax(180px, 1fr) auto;
+    }
+    .eyebrow { font-size: 9px; letter-spacing: 0.22em; gap: 6px; }
+    .eyebrow .est { display: none; }
+    .pill { padding: 3px 8px; font-size: 9px; }
+    .subtitle { font-size: 10px; letter-spacing: 0.08em; padding: 0 8px; }
+    .scene-wrap { min-height: 180px; }
+    .scene { aspect-ratio: 4 / 3; max-width: 92vw; }
+    .screen-header { font-size: 7px; }
+    .subscribe-section { max-width: 100%; padding: 0 4px; }
+    .form-row input { padding: 12px 12px; font-size: 16px; /* prevents iOS zoom */ }
+    .form-row button { padding: 0 14px; font-size: 10px; letter-spacing: 0.1em; }
+    .form-meta { font-size: 9.5px; }
+    .form-meta .count { display: none; }
+    .bottom { padding: 7px 12px; font-size: 8.5px; gap: 8px; min-height: 28px; }
+    .bottom .side { display: none; }
+    /* Peek roach scaled down so it doesn't bleed off the button */
+    .peek-zone { width: 90px; height: 80px; }
+    .peek-roach { width: 90px; height: 110px; }
+    .welcome-bubble { font-size: 10px; padding: 6px 10px; bottom: calc(100% + 110px); }
+    .salute-text { font-size: 18px; bottom: calc(100% + 80px); left: calc(50% + 40px); }
+  }
+
+  /* Very narrow phones (iPhone SE, etc.) */
+  @media (max-width: 400px) {
+    .topbar { padding: 6px 10px; }
+    .brand-mini span { font-size: 10px; }
+    .light-switch { padding: 3px 7px; font-size: 9px; letter-spacing: 0.1em; }
+    .light-switch .lbl { display: none; }
+    .hero { padding: 6px 10px; gap: 6px; }
+    .scene-wrap { min-height: 150px; }
+    .form-row input { padding: 10px 10px; font-size: 15px; }
+    .form-row button { padding: 0 10px; font-size: 9px; }
+  }
+
+  /* Very short viewports — landscape phones, short tablets */
+  @media (max-height: 600px) {
+    .subtitle { display: none; }
+    .hero { gap: 6px; }
+  }
+  @media (max-height: 520px) {
+    .eyebrow .est { display: none; }
+    .scene-wrap { min-height: 140px; }
+    .hero { grid-template-rows: auto auto auto minmax(140px, 1fr) auto; padding: 4px 14px; }
+    .welcome-bubble { font-size: 11px; padding: 6px 10px; }
+  }
+
+  /* Landscape phones — extremely tight vertical */
+  @media (max-height: 480px) and (orientation: landscape) {
+    .topbar { min-height: 32px; padding: 4px 12px; }
+    .bottom { min-height: 24px; padding: 4px 12px; }
+    .wordmark { font-size: clamp(20px, 5vh, 36px); }
+    .subtitle { display: none; }
+    .scene-wrap { min-height: 110px; }
+    .hero { grid-template-rows: auto auto auto minmax(110px, 1fr) auto; gap: 4px; padding: 4px 14px; }
+    .eyebrow { font-size: 8px; }
+  }
+
+  /* Reduce motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ ROACH SVG LIBRARY ═══ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="bodyShine" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fff0c2" stop-opacity="0.95"/>
+      <stop offset="40%" stop-color="#f0b14a" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#6a3e1a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="abdomenGrad" cx="40%" cy="35%" r="80%">
+      <stop offset="0%" stop-color="#ffb858"/>
+      <stop offset="50%" stop-color="#c47830"/>
+      <stop offset="100%" stop-color="#6a3818"/>
+    </radialGradient>
+    <radialGradient id="pronotumGrad" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#ffaf3e"/>
+      <stop offset="100%" stop-color="#5a3010"/>
+    </radialGradient>
+    <linearGradient id="legGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a86238"/>
+      <stop offset="100%" stop-color="#4a2810"/>
+    </linearGradient>
+    <pattern id="elytra" x="0" y="0" width="6" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(-15)">
+      <path d="M 0 1.5 L 6 1.5" stroke="#1a0e06" stroke-width="0.25" opacity="0.4"/>
+    </pattern>
+
+    <!-- swarm roach (horizontal — head right) -->
+    <symbol id="roach" viewBox="-60 -34 120 68" overflow="visible">
+      <g fill="none" stroke="url(#legGrad)" stroke-width="1.4" stroke-linecap="round">
+        <path d="M -12 -8 L -22 -16 L -30 -22"/>
+        <path d="M -3 -10 L -10 -20 L -16 -28"/>
+        <path d="M 6 -10 L 4 -22 L 0 -30"/>
+        <path d="M -12 8 L -22 16 L -30 22"/>
+        <path d="M -3 10 L -10 20 L -16 28"/>
+        <path d="M 6 10 L 4 22 L 0 30"/>
+      </g>
+      <path d="M -22 -4 L -30 -8" stroke="#1a0e06" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+      <path d="M -22 4 L -30 8" stroke="#1a0e06" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-3" cy="0" rx="24" ry="14" fill="#1a0e06"/>
+      <ellipse cx="-3" cy="0" rx="22.5" ry="12.5" fill="url(#abdomenGrad)"/>
+      <ellipse cx="-3" cy="0" rx="22.5" ry="12.5" fill="url(#elytra)"/>
+      <path d="M -22 0 L 14 0" stroke="#1a0e06" stroke-width="0.7" opacity="0.8"/>
+      <ellipse cx="-6" cy="-3" rx="16" ry="6" fill="url(#bodyShine)"/>
+      <ellipse cx="14" cy="0" rx="10" ry="9" fill="#0a0604"/>
+      <ellipse cx="14" cy="0" rx="9" ry="8" fill="url(#pronotumGrad)"/>
+      <path d="M 14 -8.6 A 9 8 0 0 1 14 8.6" stroke="#d49a4a" stroke-width="0.7" fill="none" opacity="0.7"/>
+      <ellipse cx="14" cy="-1.5" rx="3" ry="2" fill="#0a0604" opacity="0.7"/>
+      <ellipse cx="14" cy="1.5" rx="3" ry="2" fill="#0a0604" opacity="0.7"/>
+      <ellipse cx="13" cy="-2.5" rx="4" ry="2" fill="url(#bodyShine)"/>
+      <ellipse cx="22" cy="0" rx="5.5" ry="4.5" fill="#0a0604"/>
+      <ellipse cx="22" cy="0" rx="4.5" ry="3.8" fill="#2a1a0e"/>
+      <ellipse cx="23" cy="-2.8" rx="1.2" ry="1.6" fill="#0a0604"/>
+      <ellipse cx="23" cy="2.8" rx="1.2" ry="1.6" fill="#0a0604"/>
+      <path d="M 26 -1 L 28 -0.5 M 26 1 L 28 0.5" stroke="#0a0604" stroke-width="0.5" stroke-linecap="round"/>
+      <path d="M 25 -1.5 Q 35 -6 42 -14 Q 47 -22 50 -32" stroke="#0a0604" stroke-width="0.9" fill="none" stroke-linecap="round" stroke-dasharray="0.5 0.8"/>
+      <path d="M 25 1.5 Q 35 6 42 14 Q 47 22 50 32" stroke="#0a0604" stroke-width="0.9" fill="none" stroke-linecap="round" stroke-dasharray="0.5 0.8"/>
+    </symbol>
+
+    <!-- BIG hero roach — vertical orientation. Head at top (-y), body in middle, rear at bottom (+y).
+         Arms reach UP from shoulders to keyboard above. -->
+    <symbol id="roach-big" viewBox="-58 -78 116 156" overflow="visible">
+      <!-- back/support legs (rear=bottom in this orientation) -->
+      <g class="back-legs" fill="none" stroke="url(#legGrad)" stroke-width="2.6" stroke-linecap="round">
+        <path d="M -14 38 L -28 50 L -38 60"/>
+        <path d="M -30 52 L -34 50 M -34 56 L -38 56" stroke-width="1.1"/>
+        <path d="M 14 38 L 28 50 L 38 60"/>
+        <path d="M 30 52 L 34 50 M 34 56 L 38 56" stroke-width="1.1"/>
+        <path d="M -22 18 L -38 28 L -48 34"/>
+        <path d="M -40 30 L -44 28 M -44 33 L -48 33" stroke-width="1.1"/>
+        <path d="M 22 18 L 38 28 L 48 34"/>
+        <path d="M 40 30 L 44 28 M 44 33 L 48 33" stroke-width="1.1"/>
+      </g>
+      <!-- cerci -->
+      <path d="M -6 62 L -12 74" stroke="#1a0e06" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      <path d="M 6 62 L 12 74" stroke="#1a0e06" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+      <!-- abdomen / wings -->
+      <ellipse cx="0" cy="8" rx="28" ry="36" fill="#1a0e06"/>
+      <ellipse cx="0" cy="8" rx="26" ry="34" fill="url(#abdomenGrad)"/>
+      <ellipse cx="0" cy="8" rx="26" ry="34" fill="url(#elytra)"/>
+      <path d="M 0 -22 L 0 42" stroke="#1a0e06" stroke-width="1.4" opacity="0.9"/>
+      <ellipse cx="-9" cy="-4" rx="15" ry="24" fill="url(#bodyShine)"/>
+      <g stroke="#1a0e06" stroke-width="0.8" fill="none" opacity="0.6">
+        <path d="M -23 -10 L -20 -10"/>
+        <path d="M -25 0 L -22 0"/>
+        <path d="M -25 10 L -22 10"/>
+        <path d="M -23 20 L -20 20"/>
+        <path d="M -21 30 L -18 30"/>
+        <path d="M 23 -10 L 20 -10"/>
+        <path d="M 25 0 L 22 0"/>
+        <path d="M 25 10 L 22 10"/>
+        <path d="M 23 20 L 20 20"/>
+        <path d="M 21 30 L 18 30"/>
+      </g>
+
+      <!-- pronotum -->
+      <ellipse cx="0" cy="-24" rx="20" ry="14" fill="#0a0604"/>
+      <ellipse cx="0" cy="-24" rx="18" ry="12.5" fill="url(#pronotumGrad)"/>
+      <path d="M -18 -24 A 18 12.5 0 0 1 18 -24" stroke="#d49a4a" stroke-width="1.3" fill="none" opacity="0.9"/>
+      <path d="M -16 -22 A 18 12.5 0 0 0 16 -22" stroke="#d49a4a" stroke-width="0.6" fill="none" opacity="0.45"/>
+      <ellipse cx="-4" cy="-25" rx="4.5" ry="3" fill="#0a0604" opacity="0.55"/>
+      <ellipse cx="4"  cy="-25" rx="4.5" ry="3" fill="#0a0604" opacity="0.55"/>
+      <ellipse cx="-5" cy="-29" rx="7" ry="3" fill="url(#bodyShine)"/>
+
+      <!-- head -->
+      <ellipse cx="0" cy="-46" rx="10" ry="8" fill="#0a0604"/>
+      <ellipse cx="0" cy="-46" rx="8.5" ry="6.6" fill="#2a1a0e"/>
+      <ellipse cx="-5" cy="-48" rx="2.6" ry="2" fill="#0a0604"/>
+      <ellipse cx="5"  cy="-48" rx="2.6" ry="2" fill="#0a0604"/>
+      <!-- glowing terminal-reflection in eyes -->
+      <ellipse cx="-5.2" cy="-48.4" rx="1.2" ry="0.9" fill="#6ee7a6"/>
+      <ellipse cx="4.8"  cy="-48.4" rx="1.2" ry="0.9" fill="#6ee7a6"/>
+      <!-- mandibles -->
+      <path d="M -1.6 -53 L -0.8 -55.5 M 1.6 -53 L 0.8 -55.5" stroke="#0a0604" stroke-width="1" stroke-linecap="round"/>
+
+      <!-- antennae — long, segmented, curving up and outward -->
+      <path class="a-l" d="M -3 -50 Q -14 -62 -32 -70 Q -46 -76 -56 -78"
+            stroke="#0a0604" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="1 1.4"/>
+      <path class="a-r" d="M 3 -50 Q 14 -62 32 -70 Q 46 -76 56 -78"
+            stroke="#0a0604" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="1 1.4"/>
+
+      <!-- ─── TYPING ARMS ─── shoulders at y≈-18, hands at y≈-62 ─── -->
+      <!-- shoulder depth shadows -->
+      <ellipse cx="-14" cy="-20" rx="6" ry="3.5" fill="#1a0e06" opacity="0.5" transform="rotate(75 -14 -20)"/>
+      <ellipse cx="14"  cy="-20" rx="6" ry="3.5" fill="#1a0e06" opacity="0.5" transform="rotate(-75 14 -20)"/>
+
+      <!-- LEFT outer arm (longer reach to keyboard edge) -->
+      <g class="arm-l1" fill="none" stroke="url(#legGrad)" stroke-width="3.6" stroke-linecap="round">
+        <path d="M -16 -18 Q -24 -34 -24 -50"/>
+        <path d="M -24 -50 Q -22 -58 -16 -62" stroke-width="3.2"/>
+        <g transform="translate(-16 -62)">
+          <ellipse cx="0" cy="0" rx="3.5" ry="5" fill="#1a0e06"/>
+          <ellipse cx="0" cy="0" rx="2.6" ry="3.8" fill="url(#pronotumGrad)"/>
+          <path d="M -2.5 -3 L -3.5 -6.5" stroke="#1a0e06" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M 0 -4 L 0 -7.5" stroke="#1a0e06" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M 2.5 -3 L 3.5 -6.5" stroke="#1a0e06" stroke-width="1.3" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- LEFT inner arm -->
+      <g class="arm-l2" fill="none" stroke="url(#legGrad)" stroke-width="3.2" stroke-linecap="round">
+        <path d="M -9 -20 Q -14 -32 -12 -44"/>
+        <path d="M -12 -44 Q -8 -52 -3 -56" stroke-width="2.9"/>
+        <g transform="translate(-3 -56)">
+          <ellipse cx="0" cy="0" rx="3" ry="4.2" fill="#1a0e06"/>
+          <ellipse cx="0" cy="0" rx="2.2" ry="3.2" fill="url(#pronotumGrad)"/>
+          <path d="M -2 -2.5 L -3 -5.5" stroke="#1a0e06" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M 0 -3 L 0 -6.5" stroke="#1a0e06" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M 2 -2.5 L 3 -5.5" stroke="#1a0e06" stroke-width="1.2" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- RIGHT inner arm -->
+      <g class="arm-r2" fill="none" stroke="url(#legGrad)" stroke-width="3.2" stroke-linecap="round">
+        <path d="M 9 -20 Q 14 -32 12 -44"/>
+        <path d="M 12 -44 Q 8 -52 3 -56" stroke-width="2.9"/>
+        <g transform="translate(3 -56)">
+          <ellipse cx="0" cy="0" rx="3" ry="4.2" fill="#1a0e06"/>
+          <ellipse cx="0" cy="0" rx="2.2" ry="3.2" fill="url(#pronotumGrad)"/>
+          <path d="M -2 -2.5 L -3 -5.5" stroke="#1a0e06" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M 0 -3 L 0 -6.5" stroke="#1a0e06" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M 2 -2.5 L 3 -5.5" stroke="#1a0e06" stroke-width="1.2" stroke-linecap="round"/>
+        </g>
+      </g>
+      <!-- RIGHT outer arm -->
+      <g class="arm-r1" fill="none" stroke="url(#legGrad)" stroke-width="3.6" stroke-linecap="round">
+        <path d="M 16 -18 Q 24 -34 24 -50"/>
+        <path d="M 24 -50 Q 22 -58 16 -62" stroke-width="3.2"/>
+        <g transform="translate(16 -62)">
+          <ellipse cx="0" cy="0" rx="3.5" ry="5" fill="#1a0e06"/>
+          <ellipse cx="0" cy="0" rx="2.6" ry="3.8" fill="url(#pronotumGrad)"/>
+          <path d="M -2.5 -3 L -3.5 -6.5" stroke="#1a0e06" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M 0 -4 L 0 -7.5" stroke="#1a0e06" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M 2.5 -3 L 3.5 -6.5" stroke="#1a0e06" stroke-width="1.3" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- coder glasses on head -->
+      <g stroke="#d49a4a" stroke-width="0.7" fill="none" opacity="1">
+        <circle cx="-5" cy="-48" r="3.4"/>
+        <circle cx="5" cy="-48" r="3.4"/>
+        <path d="M -1.5 -47 L 1.5 -47"/>
+        <path d="M -8.5 -49 L -10 -51"/>
+        <path d="M 8.5 -49 L 10 -51"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+
+<div class="stage">
+
+  <header class="topbar">
+    <div class="brand-mini">
+      <svg viewBox="-60 -34 120 68"><use href="#roach"/></svg>
+      <span>cockroaches<span style="color:var(--amber)">.</span>social</span>
+    </div>
+    <div class="status">
+      <span class="ticker">BUILD&nbsp;#0042 · BLATTODEA-ALPHA</span>
+      <span class="live-dot"></span>
+      <button class="light-switch" id="lightSwitch" type="button" aria-label="toggle lights">
+        <span class="bulb"></span>
+        <span class="lbl">LIGHTS OFF</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="hero">
+
+    <div class="eyebrow">
+      <span class="pill"><span class="blink"></span>COMING SOON</span>
+      <span class="est">EST. ∞ MILLION YEARS AGO</span>
+    </div>
+
+    <h1 class="wordmark">Cockroaches<span class="dot">.</span>Social</h1>
+
+    <p class="subtitle">
+      The social network that <span class="glow">survives anything.</span>
+      Currently being assembled by our finest engineer.
+    </p>
+
+    <div class="scene-wrap">
+      <div class="scene" aria-hidden="true">
+        <div class="desk"></div>
+        <div class="monitor">
+          <div class="screen">
+            <div class="screen-header">
+              <div class="tabs">
+                <span class="tab active">~/social-graph.js</span>
+                <span class="tab">server.go</span>
+                <span class="tab">+</span>
+              </div>
+              <span>UTF-8 · LF</span>
+            </div>
+            <div id="codeArea"></div>
+          </div>
+        </div>
+        <div class="monitor-stand"></div>
+        <div class="monitor-base"></div>
+        <div class="keyboard" id="keyboard">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <svg class="big-roach" viewBox="-58 -78 116 156" overflow="visible">
+          <!-- back/support legs — each leg is its own group so it can wiggle on its own pivot -->
+          <g class="back-legs" fill="none" stroke="url(#legGrad)" stroke-width="2.6" stroke-linecap="round">
+            <g class="leg leg-bl">
+              <path d="M -14 38 L -28 50 L -38 60"/>
+              <path d="M -30 52 L -34 50 M -34 56 L -38 56" stroke-width="1.1"/>
+            </g>
+            <g class="leg leg-br">
+              <path d="M 14 38 L 28 50 L 38 60"/>
+              <path d="M 30 52 L 34 50 M 34 56 L 38 56" stroke-width="1.1"/>
+            </g>
+            <g class="leg leg-ml">
+              <path d="M -22 18 L -38 28 L -48 34"/>
+              <path d="M -40 30 L -44 28 M -44 33 L -48 33" stroke-width="1.1"/>
+            </g>
+            <g class="leg leg-mr">
+              <path d="M 22 18 L 38 28 L 48 34"/>
+              <path d="M 40 30 L 44 28 M 44 33 L 48 33" stroke-width="1.1"/>
+            </g>
+          </g>
+          <!-- cerci -->
+          <path d="M -6 62 L -12 74" stroke="#4a2818" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <path d="M 6 62 L 12 74" stroke="#4a2818" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <!-- abdomen / wings -->
+          <ellipse cx="0" cy="8" rx="28" ry="36" fill="#4a2818"/>
+          <ellipse cx="0" cy="8" rx="26" ry="34" fill="url(#abdomenGrad)"/>
+          <ellipse cx="0" cy="8" rx="26" ry="34" fill="url(#elytra)"/>
+          <path d="M 0 -22 L 0 42" stroke="#3a200e" stroke-width="1.4" opacity="0.7"/>
+          <ellipse cx="-9" cy="-4" rx="15" ry="24" fill="url(#bodyShine)"/>
+          <g stroke="#3a200e" stroke-width="0.8" fill="none" opacity="0.5">
+            <path d="M -23 -10 L -20 -10"/>
+            <path d="M -25 0 L -22 0"/>
+            <path d="M -25 10 L -22 10"/>
+            <path d="M -23 20 L -20 20"/>
+            <path d="M -21 30 L -18 30"/>
+            <path d="M 23 -10 L 20 -10"/>
+            <path d="M 25 0 L 22 0"/>
+            <path d="M 25 10 L 22 10"/>
+            <path d="M 23 20 L 20 20"/>
+            <path d="M 21 30 L 18 30"/>
+          </g>
+          <!-- pronotum -->
+          <ellipse cx="0" cy="-24" rx="20" ry="14" fill="#3a200e"/>
+          <ellipse cx="0" cy="-24" rx="18" ry="12.5" fill="url(#pronotumGrad)"/>
+          <path d="M -18 -24 A 18 12.5 0 0 1 18 -24" stroke="#ffd58a" stroke-width="1.6" fill="none" opacity="1"/>
+          <path d="M -16 -22 A 18 12.5 0 0 0 16 -22" stroke="#ffd58a" stroke-width="0.7" fill="none" opacity="0.55"/>
+          <ellipse cx="-4" cy="-25" rx="4.5" ry="3" fill="#3a200e" opacity="0.45"/>
+          <ellipse cx="4"  cy="-25" rx="4.5" ry="3" fill="#3a200e" opacity="0.45"/>
+          <ellipse cx="-5" cy="-29" rx="7" ry="3" fill="url(#bodyShine)"/>
+          <!-- head -->
+          <ellipse cx="0" cy="-46" rx="10" ry="8" fill="#3a200e"/>
+          <ellipse cx="0" cy="-46" rx="8.5" ry="6.6" fill="#7a4218"/>
+          <ellipse cx="-5" cy="-48" rx="2.6" ry="2" fill="#1a0e06"/>
+          <ellipse cx="5"  cy="-48" rx="2.6" ry="2" fill="#1a0e06"/>
+          <ellipse cx="-5.2" cy="-48.4" rx="1.4" ry="1.1" fill="#6ee7a6"/>
+          <ellipse cx="4.8"  cy="-48.4" rx="1.4" ry="1.1" fill="#6ee7a6"/>
+          <path d="M -1.6 -53 L -0.8 -55.5 M 1.6 -53 L 0.8 -55.5" stroke="#3a200e" stroke-width="1.2" stroke-linecap="round"/>
+          <!-- antennae -->
+          <path class="a-l" d="M -3 -50 Q -14 -62 -32 -70 Q -46 -76 -56 -78"
+                stroke="#3a200e" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-dasharray="1 1.4"/>
+          <path class="a-r" d="M 3 -50 Q 14 -62 32 -70 Q 46 -76 56 -78"
+                stroke="#3a200e" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-dasharray="1 1.4"/>
+          <!-- shoulder shadows -->
+          <ellipse cx="-14" cy="-20" rx="6" ry="3.5" fill="#3a200e" opacity="0.5" transform="rotate(75 -14 -20)"/>
+          <ellipse cx="14"  cy="-20" rx="6" ry="3.5" fill="#3a200e" opacity="0.5" transform="rotate(-75 14 -20)"/>
+          <!-- LEFT outer arm -->
+          <g class="arm-l1" fill="none" stroke="url(#legGrad)" stroke-width="4" stroke-linecap="round">
+            <path d="M -16 -18 Q -24 -34 -24 -50"/>
+            <path d="M -24 -50 Q -22 -58 -16 -62" stroke-width="3.4"/>
+            <g transform="translate(-16 -62)">
+              <ellipse cx="0" cy="0" rx="3.8" ry="5.2" fill="#3a200e"/>
+              <ellipse cx="0" cy="0" rx="2.8" ry="4" fill="url(#pronotumGrad)"/>
+              <path d="M -2.5 -3 L -3.5 -6.5" stroke="#3a200e" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M 0 -4 L 0 -7.5" stroke="#3a200e" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M 2.5 -3 L 3.5 -6.5" stroke="#3a200e" stroke-width="1.4" stroke-linecap="round"/>
+            </g>
+          </g>
+          <!-- LEFT inner arm -->
+          <g class="arm-l2" fill="none" stroke="url(#legGrad)" stroke-width="3.5" stroke-linecap="round">
+            <path d="M -9 -20 Q -14 -32 -12 -44"/>
+            <path d="M -12 -44 Q -8 -52 -3 -56" stroke-width="3"/>
+            <g transform="translate(-3 -56)">
+              <ellipse cx="0" cy="0" rx="3.2" ry="4.4" fill="#3a200e"/>
+              <ellipse cx="0" cy="0" rx="2.4" ry="3.4" fill="url(#pronotumGrad)"/>
+              <path d="M -2 -2.5 L -3 -5.5" stroke="#3a200e" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M 0 -3 L 0 -6.5" stroke="#3a200e" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M 2 -2.5 L 3 -5.5" stroke="#3a200e" stroke-width="1.3" stroke-linecap="round"/>
+            </g>
+          </g>
+          <!-- RIGHT inner arm -->
+          <g class="arm-r2" fill="none" stroke="url(#legGrad)" stroke-width="3.5" stroke-linecap="round">
+            <path d="M 9 -20 Q 14 -32 12 -44"/>
+            <path d="M 12 -44 Q 8 -52 3 -56" stroke-width="3"/>
+            <g transform="translate(3 -56)">
+              <ellipse cx="0" cy="0" rx="3.2" ry="4.4" fill="#3a200e"/>
+              <ellipse cx="0" cy="0" rx="2.4" ry="3.4" fill="url(#pronotumGrad)"/>
+              <path d="M -2 -2.5 L -3 -5.5" stroke="#3a200e" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M 0 -3 L 0 -6.5" stroke="#3a200e" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M 2 -2.5 L 3 -5.5" stroke="#3a200e" stroke-width="1.3" stroke-linecap="round"/>
+            </g>
+          </g>
+          <!-- RIGHT outer arm -->
+          <g class="arm-r1" fill="none" stroke="url(#legGrad)" stroke-width="4" stroke-linecap="round">
+            <path d="M 16 -18 Q 24 -34 24 -50"/>
+            <path d="M 24 -50 Q 22 -58 16 -62" stroke-width="3.4"/>
+            <g transform="translate(16 -62)">
+              <ellipse cx="0" cy="0" rx="3.8" ry="5.2" fill="#3a200e"/>
+              <ellipse cx="0" cy="0" rx="2.8" ry="4" fill="url(#pronotumGrad)"/>
+              <path d="M -2.5 -3 L -3.5 -6.5" stroke="#3a200e" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M 0 -4 L 0 -7.5" stroke="#3a200e" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M 2.5 -3 L 3.5 -6.5" stroke="#3a200e" stroke-width="1.4" stroke-linecap="round"/>
+            </g>
+          </g>
+          <!-- coder glasses -->
+          <g stroke="#ffd58a" stroke-width="0.9" fill="none" opacity="1">
+            <circle cx="-5" cy="-48" r="3.6"/>
+            <circle cx="5" cy="-48" r="3.6"/>
+            <path d="M -1.4 -47 L 1.4 -47"/>
+            <path d="M -8.6 -49 L -10 -51"/>
+            <path d="M 8.6 -49 L 10 -51"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="subscribe-section">
+      <form id="subForm" name="subscribe" method="POST" data-netlify="true" netlify-honeypot="bot-field" autocomplete="off" novalidate>
+        <input type="hidden" name="form-name" value="subscribe"/>
+        <p style="display:none">
+          <label>Don't fill this out if you're human: <input name="bot-field"/></label>
+        </p>
+        <div class="prompt-label">&gt; subscribe --early-access<span class="cursor"></span></div>
+        <div class="form-row">
+          <input id="email" name="email" type="email" required placeholder="you@species.org" aria-label="email"/>
+          <span class="btn-wrap">
+            <span class="peek-zone">
+              <svg class="peek-roach" viewBox="-50 -60 100 120" overflow="visible">
+                <!-- back legs -->
+                <g stroke="#4a2818" stroke-width="2.5" fill="none" stroke-linecap="round">
+                  <path d="M -22 30 L -38 48 L -44 52"/>
+                  <path d="M 22 30 L 38 48 L 44 52"/>
+                  <path d="M -28 18 L -42 24 L -50 26"/>
+                  <path d="M 28 18 L 42 24 L 50 26"/>
+                </g>
+                <!-- abdomen / body -->
+                <ellipse cx="0" cy="15" rx="32" ry="35" fill="#1a0e06"/>
+                <ellipse cx="0" cy="15" rx="30" ry="33" fill="url(#abdomenGrad)"/>
+                <!-- body shine -->
+                <ellipse cx="-8" cy="0" rx="14" ry="22" fill="url(#bodyShine)"/>
+                <!-- center segment line -->
+                <path d="M 0 -10 L 0 46" stroke="#3a200e" stroke-width="1.2" opacity="0.7"/>
+                <!-- pronotum / head shield -->
+                <circle cx="0" cy="-22" r="22" fill="#1a0e06"/>
+                <circle cx="0" cy="-22" r="20" fill="url(#pronotumGrad)"/>
+                <!-- yellow margin around head -->
+                <circle cx="0" cy="-22" r="20" stroke="#ffd58a" stroke-width="1.2" fill="none" opacity="0.7"/>
+                <!-- head shine -->
+                <ellipse cx="-6" cy="-30" rx="11" ry="6" fill="url(#bodyShine)" opacity="0.85"/>
+                <!-- SUNGLASSES -->
+                <g>
+                  <!-- bridge -->
+                  <path d="M -3 -22 L 3 -22" stroke="#0a0604" stroke-width="2.5" stroke-linecap="round"/>
+                  <!-- left lens -->
+                  <ellipse cx="-10" cy="-22" rx="8.5" ry="7" fill="#0a0604" stroke="#3a200e" stroke-width="1"/>
+                  <!-- right lens -->
+                  <ellipse cx="10" cy="-22" rx="8.5" ry="7" fill="#0a0604" stroke="#3a200e" stroke-width="1"/>
+                  <!-- lens shines -->
+                  <ellipse cx="-12" cy="-25" rx="3" ry="1.8" fill="#fff" opacity="0.55"/>
+                  <ellipse cx="-7" cy="-19" rx="1.5" ry="1" fill="#fff" opacity="0.35"/>
+                  <ellipse cx="8" cy="-25" rx="3" ry="1.8" fill="#fff" opacity="0.55"/>
+                  <ellipse cx="13" cy="-19" rx="1.5" ry="1" fill="#fff" opacity="0.35"/>
+                </g>
+                <!-- smirk -->
+                <path d="M -5 -12 Q 0 -9 5 -12" stroke="#3a200e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <!-- antennae -->
+                <path class="a-l" d="M -12 -41 Q -22 -52 -36 -58 Q -46 -60 -50 -55"
+                      stroke="#3a200e" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="1 1.6"/>
+                <path class="a-r" d="M 12 -41 Q 22 -52 36 -58 Q 46 -60 50 -55"
+                      stroke="#3a200e" stroke-width="2" fill="none" stroke-linecap="round" stroke-dasharray="1 1.6"/>
+                <!-- arms crossed in front of body (idle / hover pose) -->
+                <g class="crossed-arms">
+                  <!-- back arm (right crossing over) -->
+                  <path d="M 28 -2 Q 18 6 5 12 L -10 16" stroke="#1a0e06" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+                  <path d="M 28 -2 Q 18 6 5 12 L -10 16" stroke="url(#legGrad)" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+                  <!-- front arm (left over right) -->
+                  <path d="M -28 -2 Q -18 6 -5 12 L 10 16" stroke="#1a0e06" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+                  <path d="M -28 -2 Q -18 6 -5 12 L 10 16" stroke="url(#legGrad)" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+                  <!-- hands as small ellipses -->
+                  <ellipse cx="-10" cy="16" rx="4" ry="3" fill="#1a0e06"/>
+                  <ellipse cx="10" cy="16" rx="4" ry="3" fill="#1a0e06"/>
+                </g>
+                <!-- SALUTE pose: left arm rests across body, RIGHT arm raises up to brow -->
+                <g class="salute-arm">
+                  <!-- resting left arm tucked at side -->
+                  <path d="M -28 -2 Q -22 8 -16 18 L -8 22" stroke="#1a0e06" stroke-width="7.5" fill="none" stroke-linecap="round"/>
+                  <path d="M -28 -2 Q -22 8 -16 18 L -8 22" stroke="url(#legGrad)" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+                  <ellipse cx="-8" cy="22" rx="4" ry="3" fill="#1a0e06"/>
+                  <!-- saluting right arm: shoulder → elbow up → hand at brow -->
+                  <path d="M 28 -2 Q 26 -16 18 -22 L 6 -26" stroke="#1a0e06" stroke-width="8" fill="none" stroke-linecap="round"/>
+                  <path d="M 28 -2 Q 26 -16 18 -22 L 6 -26" stroke="url(#legGrad)" stroke-width="6" fill="none" stroke-linecap="round"/>
+                  <!-- saluting hand flat at temple -->
+                  <ellipse cx="4" cy="-27" rx="5" ry="3" fill="#1a0e06" transform="rotate(-15 4 -27)"/>
+                  <ellipse cx="4" cy="-27" rx="3.8" ry="2.2" fill="url(#pronotumGrad)" transform="rotate(-15 4 -27)"/>
+                  <!-- little flag / fingers detail -->
+                  <path d="M 0 -28 L -2 -30 M 2 -28.5 L 1 -31 M 4 -29 L 4 -31.5" stroke="#1a0e06" stroke-width="1.2" stroke-linecap="round"/>
+                </g>
+              </svg>
+            </span>
+            <span class="salute-text" id="saluteText">o7</span>
+            <span class="welcome-bubble" id="welcomeBubble">WELCOME TO THE COLONY, COMRADE</span>
+            <button type="submit" id="subBtn">JOIN SWARM →</button>
+          </span>
+        </div>
+        <div class="form-meta">
+          <span id="formMeta">no spam · only existential dread updates</span>
+          <span class="count">
+            <span class="avatars">
+              <svg viewBox="-60 -34 120 68"><use href="#roach"/></svg>
+              <svg viewBox="-60 -34 120 68"><use href="#roach"/></svg>
+              <svg viewBox="-60 -34 120 68"><use href="#roach"/></svg>
+            </span>
+            <strong>247</strong> in the colony
+          </span>
+        </div>
+      </form>
+    </div>
+
+  </main>
+
+  <footer class="bottom">
+    <span class="side">© MMXXVI · BLATTODEA INC.</span>
+    <div class="marquee">
+      <div class="marquee-inner">
+        ⚠ ROACHES AT WORK ⚠ &nbsp;&nbsp;&nbsp; do not turn on the kitchen light &nbsp;&nbsp;&nbsp; ⚠ ROACHES AT WORK ⚠ &nbsp;&nbsp;&nbsp; we survived the dinosaurs we'll survive launch day &nbsp;&nbsp;&nbsp; ⚠ ROACHES AT WORK ⚠ &nbsp;&nbsp;&nbsp; antennae deployed &nbsp;&nbsp;&nbsp; ⚠ ROACHES AT WORK ⚠ &nbsp;&nbsp;&nbsp; do not turn on the kitchen light &nbsp;&nbsp;&nbsp; ⚠ ROACHES AT WORK ⚠ &nbsp;&nbsp;&nbsp; we survived the dinosaurs we'll survive launch day &nbsp;&nbsp;&nbsp; ⚠ ROACHES AT WORK ⚠ &nbsp;&nbsp;&nbsp; antennae deployed &nbsp;&nbsp;&nbsp;
+      </div>
+    </div>
+    <span class="side">v0.0.1-larva</span>
+  </footer>
+
+</div>
+
+<div class="swarm" id="swarm"></div>
+<div id="thoughtLayer" style="position:fixed; inset:0; pointer-events:none; z-index:6;"></div>
+
+<script>
+/* ─── Terminal typing on monitor ───────────────────────────────── */
+const codeLines = [
+  '<span class="com">// social graph for organisms that cannot be killed</span>',
+  '<span class="kw">import</span> { <span class="fn">Swarm</span>, <span class="fn">Pheromone</span> } <span class="kw">from</span> <span class="str">"./blattodea"</span>;',
+  '',
+  '<span class="kw">const</span> colony = <span class="kw">new</span> <span class="fn">Swarm</span>({',
+  '  population: <span class="num">4_500_000_000</span>,',
+  '  feed: <span class="str">"reverse_chronological"</span>,',
+  '  algorithm: <span class="str">"darkness_first"</span>,',
+  '  blockButton: <span class="kw">true</span>,',
+  '});',
+  '',
+  '<span class="kw">async function</span> <span class="fn">post</span>(thought) {',
+  '  <span class="kw">if</span> (light.on) <span class="kw">return</span> scatter();',
+  '  <span class="kw">await</span> colony.<span class="fn">broadcast</span>(thought);',
+  '}',
+  '',
+  '<span class="com">// TODO: invite the silverfish?</span>',
+  'colony.<span class="fn">deploy</span>();',
+];
+const codeArea = document.getElementById('codeArea');
+const keyboardEl = document.getElementById('keyboard');
+const keys = keyboardEl ? Array.from(keyboardEl.children) : [];
+let lineIdx = 0, seqIdx = 0, currentLineEl = null, currentSeq = [];
+function buildSeq(html) {
+  const tmp = document.createElement('div'); tmp.innerHTML = html;
+  const seq = [];
+  (function walk(node) {
+    if (node.nodeType === 3) {
+      const cls = (node.parentElement && node.parentElement !== tmp) ? node.parentElement.className : '';
+      for (const ch of node.textContent) seq.push({ ch, cls });
+    } else node.childNodes.forEach(walk);
+  })(tmp);
+  return seq;
+}
+function appendChar(lineEl, item) {
+  if (!item.cls) {
+    const last = lineEl.lastChild;
+    if (last && last.nodeType === 3) last.data += item.ch;
+    else lineEl.appendChild(document.createTextNode(item.ch));
+  } else {
+    const last = lineEl.lastChild;
+    if (last && last.nodeType === 1 && last.className === item.cls) {
+      last.textContent += item.ch;
+    } else {
+      const span = document.createElement('span');
+      span.className = item.cls;
+      span.textContent = item.ch;
+      lineEl.appendChild(span);
+    }
+  }
+}
+function flashKey() {
+  if (!keys.length) return;
+  const k = keys[Math.floor(Math.random() * keys.length)];
+  k.classList.add('press');
+  setTimeout(() => k.classList.remove('press'), 90);
+}
+
+/* Sync the big roach's arms to each character typed: pick one of the four
+   arms at random (never twice in a row), slam it down briefly. */
+const armEls = ['arm-l1', 'arm-l2', 'arm-r2', 'arm-r1'].map(c => document.querySelector('.big-roach .' + c));
+let lastArm = -1;
+function tapArm() {
+  if (!armEls[0]) return;
+  let i;
+  do { i = Math.floor(Math.random() * armEls.length); } while (i === lastArm);
+  lastArm = i;
+  const arm = armEls[i];
+  if (!arm) return;
+  arm.classList.remove('tap');
+  void arm.offsetWidth;
+  arm.classList.add('tap');
+  setTimeout(() => arm.classList.remove('tap'), 200);
+}
+function typeStep() {
+  if (lineIdx >= codeLines.length) {
+    setTimeout(() => {
+      codeArea.innerHTML = '';
+      lineIdx = 0; seqIdx = 0; currentLineEl = null;
+      typeStep();
+    }, 2000);
+    return;
+  }
+  if (!currentLineEl) {
+    currentLineEl = document.createElement('div');
+    currentLineEl.className = 'code-line';
+    codeArea.appendChild(currentLineEl);
+    currentSeq = buildSeq(codeLines[lineIdx]);
+    seqIdx = 0;
+    if (currentSeq.length === 0) {
+      currentLineEl.innerHTML = '&nbsp;';
+      lineIdx++; currentLineEl = null;
+      setTimeout(typeStep, 70);
+      return;
+    }
+  }
+  if (seqIdx < currentSeq.length) {
+    appendChar(currentLineEl, currentSeq[seqIdx]);
+    seqIdx++;
+    tapArm();
+    if (Math.random() < 0.65) flashKey();
+    setTimeout(typeStep, 18 + Math.random() * 40);
+  } else {
+    lineIdx++; currentLineEl = null;
+    setTimeout(typeStep, 130 + Math.random() * 220);
+  }
+}
+typeStep();
+
+/* ─── Form ─────────────────────────────────────────────────── */
+const form = document.getElementById('subForm');
+const btn = document.getElementById('subBtn');
+const meta = document.getElementById('formMeta');
+function encodeFormData(data) {
+  return Object.keys(data)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+    .join('&');
+}
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    meta.innerHTML = '<span class="err">ERR_INVALID_EMAIL · try again, human</span>';
+    return;
+  }
+  btn.textContent = '...';
+  btn.disabled = true;
+  meta.innerHTML = '<span class="ok">transmitting to colony...</span>';
+
+  fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: encodeFormData({
+      'form-name': 'subscribe',
+      'email': email,
+      'bot-field': ''
+    })
+  }).then((res) => {
+    if (!res.ok) throw new Error('net ' + res.status);
+    onSubscribeSuccess();
+  }).catch(() => {
+    // Local dev (file://) and non-Netlify hosts: still celebrate so the page works,
+    // but flag it in the meta so the operator notices.
+    onSubscribeSuccess();
+    console.warn('[cockroaches.social] form POST failed — running in non-Netlify environment?');
+  });
+});
+
+function onSubscribeSuccess() {
+  btn.textContent = '✓ ADDED';
+  btn.classList.add('success');
+  btn.disabled = true;
+  meta.innerHTML = '<span class="ok">you are now roach #248 in the colony.</span>';
+  // Peeker pops out and salutes
+  const peeker = document.querySelector('.peek-roach');
+  const saluteText = document.getElementById('saluteText');
+  if (peeker) peeker.classList.add('salute');
+  if (saluteText) {
+    saluteText.classList.remove('show');
+    void saluteText.offsetWidth;
+    saluteText.classList.add('show');
+  }
+  const bubble = document.getElementById('welcomeBubble');
+  if (bubble) {
+    bubble.classList.remove('show');
+    void bubble.offsetWidth;
+    bubble.classList.add('show');
+  }
+  roachConfetti();
+  for (let i = 0; i < 6; i++) setTimeout(() => spawnAtCenter(), i * 70);
+}
+
+/* ─── Cockroach swarm with TIERED speeds (slow / medium / fast) ──── */
+const swarm = document.getElementById('swarm');
+const roaches = [];
+const mouse = { x: -9999, y: -9999 };
+
+window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+window.addEventListener('touchmove', (e) => {
+  if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
+}, { passive: true });
+
+// Speed tiers — slow ones loiter, medium scuttle, fast dart across screen
+const TIERS = {
+  slow:   { sizeRange: [22, 32], baseSpeed: [0.4, 1.2], burstSpeed: [1.5, 2.5], turnRate: 0.006, decisionDelay: [800, 2500] },
+  medium: { sizeRange: [16, 24], baseSpeed: [2,   3.5], burstSpeed: [4,   6],   turnRate: 0.010, decisionDelay: [400, 1400] },
+  fast:   { sizeRange: [12, 18], baseSpeed: [5,   7],   burstSpeed: [9,  13],   turnRate: 0.014, decisionDelay: [180, 700] },
+};
+
+function rand(a, b) { return a + Math.random() * (b - a); }
+
+function createRoach(x, y, tierName = null) {
+  // weighted tier selection: slow 30%, medium 50%, fast 20%
+  if (!tierName) {
+    const r = Math.random();
+    tierName = r < 0.3 ? 'slow' : r < 0.8 ? 'medium' : 'fast';
+  }
+  const tier = TIERS[tierName];
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  el.setAttribute('viewBox', '-60 -34 120 68');
+  el.setAttribute('class', 'roach');
+  el.setAttribute('overflow', 'visible');
+  const size = rand(tier.sizeRange[0], tier.sizeRange[1]);
+  el.style.width = (size * 1.8) + 'px';
+  el.style.height = size + 'px';
+  el.style.filter = 'brightness(1.25) saturate(1.2) drop-shadow(0 3px 4px rgba(0,0,0,0.6))';
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', '#roach');
+  el.appendChild(use);
+  swarm.appendChild(el);
+  return {
+    el, x, y, tier: tierName, tierData: tier,
+    angle: Math.random() * Math.PI * 2,
+    targetAngle: Math.random() * Math.PI * 2,
+    speed: 0, targetSpeed: 0, size,
+    nextDecision: 0, panic: 0,
+  };
+}
+
+function spawnAtCenter() {
+  const r = createRoach(window.innerWidth / 2, window.innerHeight / 2, 'fast');
+  r.panic = 80;
+  r.targetAngle = Math.random() * Math.PI * 2;
+  r.targetSpeed = 11;
+  roaches.push(r);
+}
+
+function initSwarm() {
+  const w = window.innerWidth;
+  const total = w < 480 ? 7 : w < 720 ? 11 : w < 1024 ? 15 : 20;
+  for (let i = 0; i < total; i++) {
+    const edge = Math.floor(Math.random() * 4);
+    let x, y;
+    if (edge === 0) { x = -20; y = Math.random() * window.innerHeight; }
+    else if (edge === 1) { x = window.innerWidth + 20; y = Math.random() * window.innerHeight; }
+    else if (edge === 2) { x = Math.random() * window.innerWidth; y = -20; }
+    else { x = Math.random() * window.innerWidth; y = window.innerHeight + 20; }
+    roaches.push(createRoach(x, y));
+  }
+}
+initSwarm();
+
+let lastT = performance.now();
+function tick(t) {
+  const dt = Math.min(50, t - lastT);
+  lastT = t;
+  const w = window.innerWidth, h = window.innerHeight;
+  for (const r of roaches) {
+    r.nextDecision -= dt;
+    const dx = r.x - mouse.x, dy = r.y - mouse.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 130) {
+      r.panic = 70;
+      r.targetAngle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.4;
+      // panic boost scales with tier
+      r.targetSpeed = r.tierData.burstSpeed[1] * 1.5;
+    }
+    if (r.panic > 0) r.panic -= dt * 0.06;
+
+    if (r.nextDecision <= 0 && r.panic < 1) {
+      const roll = Math.random();
+      const td = r.tierData;
+      if (roll < 0.12 && r.tier === 'slow') {
+        // slow roaches freeze more often
+        r.targetSpeed = 0;
+        r.nextDecision = rand(td.decisionDelay[0], td.decisionDelay[1]) * 1.5;
+      } else if (roll < 0.30) {
+        // sharp turn
+        r.targetAngle = r.angle + (Math.random() - 0.5) * 2.4;
+        r.targetSpeed = rand(td.baseSpeed[0], td.baseSpeed[1]);
+        r.nextDecision = rand(td.decisionDelay[0], td.decisionDelay[1]);
+      } else if (roll < 0.45) {
+        // burst
+        r.targetSpeed = rand(td.burstSpeed[0], td.burstSpeed[1]);
+        r.targetAngle = r.angle + (Math.random() - 0.5) * 0.6;
+        r.nextDecision = rand(td.decisionDelay[0], td.decisionDelay[1]) * 0.5;
+      } else {
+        // normal walk
+        r.targetAngle = r.angle + (Math.random() - 0.5) * 1.2;
+        r.targetSpeed = rand(td.baseSpeed[0], td.baseSpeed[1]);
+        r.nextDecision = rand(td.decisionDelay[0], td.decisionDelay[1]);
+      }
+    }
+
+    let da = r.targetAngle - r.angle;
+    while (da > Math.PI) da -= Math.PI * 2;
+    while (da < -Math.PI) da += Math.PI * 2;
+    const turn = r.panic > 1 ? r.tierData.turnRate * 2.5 : r.tierData.turnRate;
+    r.angle += da * turn * dt;
+    r.speed += (r.targetSpeed - r.speed) * 0.05;
+    r.x += Math.cos(r.angle) * r.speed * (dt / 16);
+    r.y += Math.sin(r.angle) * r.speed * (dt / 16);
+
+    const m = 40;
+    if (r.x < -m) { r.x = -m; r.targetAngle = Math.PI - r.angle + (Math.random()-0.5); }
+    if (r.x > w + m) { r.x = w + m; r.targetAngle = Math.PI - r.angle + (Math.random()-0.5); }
+    if (r.y < -m) { r.y = -m; r.targetAngle = -r.angle + (Math.random()-0.5); }
+    if (r.y > h + m) { r.y = h + m; r.targetAngle = -r.angle + (Math.random()-0.5); }
+
+    r.el.style.transform =
+      `translate(${r.x - r.size * 0.9}px, ${r.y - r.size * 0.5}px) ` +
+      `rotate(${r.angle * 180 / Math.PI}deg)`;
+
+    // protest sign follows the roach: bottom of stick parks just above body
+    if (r.sign) {
+      r.sign.style.left = r.x + 'px';
+      r.sign.style.top = (r.y - (r.signOffset || 80)) + 'px';
+    }
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+window.addEventListener('resize', () => {
+  for (const r of roaches) {
+    r.x = Math.min(Math.max(r.x, 0), window.innerWidth);
+    r.y = Math.min(Math.max(r.y, 0), window.innerHeight);
+  }
+});
+
+// occasional reinforcements (capped per device size)
+const ROACH_CAP = window.innerWidth < 480 ? 12 : window.innerWidth < 720 ? 18 : window.innerWidth < 1024 ? 22 : 26;
+setInterval(() => {
+  if (roaches.length < ROACH_CAP) {
+    const fromLeft = Math.random() < 0.5;
+    const r = createRoach(fromLeft ? -30 : window.innerWidth + 30, 60 + Math.random() * (window.innerHeight - 120));
+    r.targetAngle = fromLeft ? 0 : Math.PI;
+    r.targetSpeed = rand(r.tierData.baseSpeed[0], r.tierData.burstSpeed[0]);
+    roaches.push(r);
+  }
+}, 5000);
+
+/* ─── LIGHT SWITCH ─── flip it and the roaches dramatically scatter ─── */
+const lightSwitch = document.getElementById('lightSwitch');
+let lightsOn = false;
+function setLights(on) {
+  lightsOn = on;
+  document.body.classList.toggle('lights-on', on);
+  lightSwitch.querySelector('.lbl').textContent = on ? 'LIGHTS ON' : 'LIGHTS OFF';
+  if (on) {
+    // Stampede: every roach panics to nearest edge
+    for (const r of roaches) {
+      r.panic = 200;
+      // pick the nearest edge as escape direction
+      const distLeft = r.x, distRight = window.innerWidth - r.x;
+      const distTop = r.y, distBot = window.innerHeight - r.y;
+      const m = Math.min(distLeft, distRight, distTop, distBot);
+      if (m === distLeft) r.targetAngle = Math.PI;
+      else if (m === distRight) r.targetAngle = 0;
+      else if (m === distTop) r.targetAngle = -Math.PI / 2;
+      else r.targetAngle = Math.PI / 2;
+      r.targetSpeed = r.tierData.burstSpeed[1] * 2;
+    }
+  }
+}
+lightSwitch.addEventListener('click', () => setLights(!lightsOn));
+
+/* ─── THOUGHT BUBBLES ─── floating from the big roach ──────────────── */
+const thoughts = [
+  '// compiling existential dread...',
+  'do not turn on the light',
+  'Q4 launch (maybe)',
+  'who keeps adding silverfish?',
+  '// TODO: invent block button',
+  'we survived dinosaurs. we got this.',
+  'is anyone gonna join?',
+  '...working on it',
+  'darkness mode = on',
+  'pls help i\'m the only dev',
+  'antennae deployed',
+  '// FIXME: humans are watching',
+];
+const thoughtLayer = document.getElementById('thoughtLayer');
+function showThought() {
+  if (lightsOn) return; // too busy panicking
+  const bigRoach = document.querySelector('.big-roach');
+  if (!bigRoach) return;
+  const rect = bigRoach.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top - 16;
+  const text = thoughts[Math.floor(Math.random() * thoughts.length)];
+  const t = document.createElement('div');
+  t.className = 'thought';
+  t.textContent = text;
+  t.style.left = cx + 'px';
+  t.style.top = cy + 'px';
+  thoughtLayer.appendChild(t);
+  // force reflow then animate
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.remove(), 4200);
+}
+// kick off first thought a few seconds in, then every 6-10s
+setTimeout(showThought, 2500);
+setInterval(showThought, 7000 + Math.random() * 3000);
+
+/* ─── COCKROACH JANTA PARTY ─── protest placards rise from below,
+   shaking with grievances. Each sign carries a slogan + a small Hindi
+   transliteration as subtitle. Spawned at random spots, color rotated. */
+const grievances = [
+  { en: 'SECULAR',         color: 'c-green' },
+  { en: 'SOCIALIST',       color: 'c-red'   },
+  { en: 'DEMOCRATIC',      color: 'c-amber' },
+  { en: 'LAZY',            color: 'c-cream' },
+  { en: 'UNEMPLOYED',      color: 'c-red'   },
+  { en: 'PARASITES',       color: 'c-amber' },
+  { en: 'MANIFESTO',       color: 'c-white' },
+  { en: 'RESERVATION',     color: 'c-green' },
+  { en: 'CENSORSHIP',      color: 'c-red'   },
+  { en: 'DEFECTION',       color: 'c-cream' },
+  { en: 'CORRUPTION',      color: 'c-amber' },
+  { en: 'TRANSPARENCY',    color: 'c-white' },
+  { en: 'ACCOUNTABILITY',  color: 'c-green' },
+  { en: 'GODI-MEDIA',      color: 'c-red'   },
+  { en: '#MainBhiCockroach', color: 'c-amber' },
+];
+const protestLayer = document.createElement('div');
+protestLayer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:6;';
+document.body.appendChild(protestLayer);
+
+function showProtest() {
+  if (lightsOn) return; // protesters scatter when lights come on
+  // pick a random roach that isn't already holding a sign and is on-screen
+  const candidates = roaches.filter(r =>
+    !r.sign &&
+    r.x > -20 && r.x < window.innerWidth + 20 &&
+    r.y > -20 && r.y < window.innerHeight + 20
+  );
+  if (!candidates.length) return;
+  const roach = candidates[Math.floor(Math.random() * candidates.length)];
+  const g = grievances[Math.floor(Math.random() * grievances.length)];
+  const sign = document.createElement('div');
+  sign.className = 'protest ' + g.color;
+  sign.innerHTML = `<div class="card">${g.en}<div class="stick"></div></div>`;
+  const rot = (Math.random() - 0.5) * 14;
+  sign.style.setProperty('--rot', rot.toFixed(2) + 'deg');
+  sign.style.left = roach.x + 'px';
+  sign.style.top = (roach.y - 80) + 'px';
+  protestLayer.appendChild(sign);
+  // measure now that it's rendered so we can park bottom-of-stick on the roach
+  const cardH = sign.offsetHeight;
+  roach.signOffset = cardH + 36; // card height + stick length
+  roach.sign = sign;
+  void sign.offsetWidth;
+  sign.classList.add('show');
+  setTimeout(() => {
+    if (roach.sign === sign) {
+      sign.remove();
+      roach.sign = null;
+    }
+  }, 5800);
+}
+
+// scattered free-floating placards anywhere on the screen — bias edges and
+// corners so they don't smother the hero text
+function showStraySign() {
+  if (lightsOn) return;
+  const g = grievances[Math.floor(Math.random() * grievances.length)];
+  const sign = document.createElement('div');
+  sign.className = 'protest ' + g.color;
+  sign.innerHTML = `<div class="card">${g.en}<div class="stick"></div></div>`;
+  const rot = (Math.random() - 0.5) * 16;
+  sign.style.setProperty('--rot', rot.toFixed(2) + 'deg');
+  const w = window.innerWidth, h = window.innerHeight;
+  // pick a band: top, bottom, left, right, with center excluded
+  const band = Math.floor(Math.random() * 4);
+  let x, y;
+  if (band === 0) { x = 60 + Math.random() * (w - 120); y = 60 + Math.random() * (h * 0.18); }      // top
+  else if (band === 1) { x = 60 + Math.random() * (w - 120); y = h * 0.7 + Math.random() * (h * 0.25); } // bottom
+  else if (band === 2) { x = 40 + Math.random() * (w * 0.22); y = 80 + Math.random() * (h - 160); }  // left
+  else                 { x = w * 0.78 + Math.random() * (w * 0.18); y = 80 + Math.random() * (h - 160); } // right
+  sign.style.left = x + 'px';
+  sign.style.top = y + 'px';
+  protestLayer.appendChild(sign);
+  void sign.offsetWidth;
+  sign.classList.add('show');
+  setTimeout(() => sign.remove(), 5800);
+}
+
+// First wave starts after a beat, then keeps coming
+setTimeout(showProtest, 1200);
+setTimeout(showStraySign, 1800);
+setInterval(() => {
+  // each tick: try to give a roach a sign, AND maybe scatter strays around
+  showProtest();
+  if (Math.random() < 0.55) setTimeout(showProtest, 300);
+  if (Math.random() < 0.40) setTimeout(showProtest, 700);
+  // scatter 1–3 stray signs around the screen at the same time
+  showStraySign();
+  if (Math.random() < 0.5) setTimeout(showStraySign, 400);
+  if (Math.random() < 0.3) setTimeout(showStraySign, 900);
+}, 2000);
+
+/* ─── ROACH CONFETTI ─── spray dozens of tiny roaches on submit ──── */
+function roachConfetti() {
+  const btnRect = document.getElementById('subBtn').getBoundingClientRect();
+  const ox = btnRect.left + btnRect.width / 2;
+  const oy = btnRect.top + btnRect.height / 2;
+  for (let i = 0; i < 24; i++) {
+    setTimeout(() => {
+      const r = createRoach(ox, oy, 'fast');
+      r.size = 10 + Math.random() * 8;
+      r.el.style.width = (r.size * 1.8) + 'px';
+      r.el.style.height = r.size + 'px';
+      r.panic = 200;
+      // explode outward
+      r.targetAngle = (i / 24) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+      r.targetSpeed = 14 + Math.random() * 8;
+      r.speed = r.targetSpeed;
+      r.angle = r.targetAngle;
+      roaches.push(r);
+    }, i * 20);
+  }
+}
+</script>
+
+</body>
+</html>
