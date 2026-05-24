@@ -1546,11 +1546,13 @@ form.addEventListener('submit', (e) => {
   }).then((res) => {
     if (!res.ok) throw new Error('net ' + res.status);
     onSubscribeSuccess();
-  }).catch(() => {
-    // Local dev (file://) and non-Netlify hosts: still celebrate so the page works,
-    // but flag it in the meta so the operator notices.
-    onSubscribeSuccess();
-    console.warn('[cockroaches.social] form POST failed — running in non-Netlify environment?');
+  }).catch((err) => {
+    // Real failure — surface it to the user, don't fake success.
+    console.warn('[cockroaches.social] form POST failed:', err);
+    btn.disabled = false;
+    btn.textContent = 'JOIN SWARM →';
+    btn.classList.remove('success');
+    meta.innerHTML = '<span class="err">ERR_TRANSMISSION · please retry in a moment</span>';
   });
 });
 
